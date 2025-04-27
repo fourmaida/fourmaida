@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catatan Pendapatku</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #74ebd5, #ACB6E5);
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    textarea {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      resize: vertical;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    button {
+      flex: 1;
+      padding: 12px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .pendapat-list {
+      margin-top: 30px;
+    }
+    .pendapat-item {
+      background: #f1f1f1;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      position: relative;
+      cursor: pointer;
+    }
+    .pendapat-item:hover {
+      background: #e0e0e0;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: #e53935;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .delete-btn:hover {
+      background: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Catatan Pendapatku</h1>
+  <textarea id="pendapatInput" placeholder="Tulis pendapatmu di sini..."></textarea>
+  
+  <div class="buttons">
+    <button onclick="simpanPendapat()">Simpan Pendapat</button>
+    <button onclick="hapusSemua()">Hapus Semua</button>
+    <button onclick="downloadPendapat()">Download Pendapat</button>
+  </div>
+
+  <div class="pendapat-list" id="pendapatList">
+    <!-- Pendapat akan muncul di sini -->
+  </div>
+</div>
+
+<script>
+  function simpanPendapat() {
+    const input = document.getElementById('pendapatInput');
+    const pendapat = input.value.trim();
+    if (pendapat === '') {
+      alert('Tuliskan sesuatu dulu!');
+      return;
+    }
+
+    let pendapatList = JSON.parse(localStorage.getItem('pendapatList')) || [];
+    pendapatList.push(pendapat);
+    localStorage.setItem('pendapatList', JSON.stringify(pendapatList));
+
+    input.value = '';
+    tampilkanPendapat();
+  }
+
+  function hapusSemua() {
+    if (confirm('Yakin mau menghapus semua pendapat?')) {
+      localStorage.removeItem('pendapatList');
+      tampilkanPendapat();
+    }
+  }
+
+  function downloadPendapat() {
+    const pendapatList = JSON.parse(localStorage.getItem('pendapatList')) || [];
+    if (pendapatList.length === 0) {
+      alert('Tidak ada pendapat untuk di-download.');
+      return;
+    }
+
+    const isiFile = pendapatList.map((item, index) => ${index + 1}. ${item}).join('\n\n');
+    const blob = new Blob([isiFile], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pendapatku.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function tampilkanPendapat() {
+    const pendapatList = JSON.parse(localStorage.getItem('pendapatList')) || [];
+    const container = document.getElementById('pendapatList');
+    container.innerHTML = '';
+
+    pendapatList.forEach(function(item, index) {
+      const div = document.createElement('div');
+      div.className = 'pendapat-item';
+      div.textContent = item;
+      div.onclick = function() {
+        editPendapat(index);
+      };
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = 'Hapus';
+      delBtn.className = 'delete-btn';
+      delBtn.onclick = function(event) {
+        event.stopPropagation(); // Supaya gak trigger edit
+        hapusPendapat(index);
+      };
+
+      div.appendChild(delBtn);
+      container.appendChild(div);
+    });
+  }
+
+  function hapusPendapat(index) {
+    let pendapatList = JSON.parse(localStorage.getItem('pendapatList')) || [];
+    pendapatList.splice(index, 1);
+    localStorage.setItem('pendapatList', JSON.stringify(pendapatList));
+    tampilkanPendapat();
+  }
+
+  function editPendapat(index) {
+    let pendapatList = JSON.parse(localStorage.getItem('pendapatList')) || [];
+    const baru = prompt('Edit pendapat:', pendapatList[index]);
+    if (baru !== null) {
+      pendapatList[index] = baru.trim();
+      localStorage.setItem('pendapatList', JSON.stringify(pendapatList));
+      tampilkanPendapat();
+    }
+  }
+
+  // Tampilkan saat halaman dibuka
+  tampilkanPendapat();
+</script>
+
+</body>
+</html>
